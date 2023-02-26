@@ -26,10 +26,10 @@ index 4e86da4e5f8af5ab6e07f846545f7b4e51e629aa..dc9d2b7ff44b0ca31ab1b6e6258795c7
  
 diff --git a/src/main/java/puregero/multipaper/commands/MPMapCommand.java b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..87d7cbaf89263e7658a613aa10a8a9ddccfb4df1
+index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f8347b2ee307
 --- /dev/null
 +++ b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
-@@ -0,0 +1,144 @@
+@@ -0,0 +1,145 @@
 +package puregero.multipaper.commands;
 +
 +import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
@@ -112,15 +112,16 @@ index 0000000000000000000000000000000000000000..87d7cbaf89263e7658a613aa10a8a9dd
 +    }
 +
 +    private void sendMap(Player player, int radius) {
-+        sendHeader(player, radius, 'W');
++        Component message = getHeader(radius, 'W');
 +        LocalExternalCache cache = computeLocalExternalCache(player, radius);
 +        for (int row = -radius; row <= radius; row++) {
 +            Component componentRow = getMapRow(player, radius, row, 0, 'N', 'S');
 +            Component statsRow = getStats(radius, row, cache);
 +            Component finalRow = componentRow.append(statsRow);
-+            player.sendMessage(finalRow);
++            message = message.append(Component.text(System.lineSeparator())).append(finalRow);
 +        }
-+        sendHeader(player, radius, 'E');
++        message = message.append(Component.text(System.lineSeparator())).append(getHeader(radius, 'E'));
++        player.sendMessage(message);
 +    }
 +
 +    private NewChunkHolder getChunkHolder(Player player, int x, int z) {
@@ -170,8 +171,8 @@ index 0000000000000000000000000000000000000000..87d7cbaf89263e7658a613aa10a8a9dd
 +        return component;
 +    }
 +
-+    private void sendHeader(Player player, int radius, char way) {
-+        player.sendMessage(Component.text("+ " + "- ".repeat(((radius * 2 + 1) / 2)) + way + " " + "- ".repeat((radius * 2 + 1) / 2) + "+").color(NamedTextColor.GOLD));
++    private Component getHeader(int radius, char way) {
++        return Component.text("+ " + "- ".repeat(((radius * 2 + 1) / 2)) + way + " " + "- ".repeat((radius * 2 + 1) / 2) + "+").color(NamedTextColor.GOLD);
 +    }
 +}
 diff --git a/src/main/java/puregero/multipaper/permissions/MultiPaperCommandPermissions.java b/src/main/java/puregero/multipaper/permissions/MultiPaperCommandPermissions.java
