@@ -26,7 +26,7 @@ index 4e86da4e5f8af5ab6e07f846545f7b4e51e629aa..dc9d2b7ff44b0ca31ab1b6e6258795c7
  
 diff --git a/src/main/java/puregero/multipaper/commands/MPMapCommand.java b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..64c38af3861ff14679570f8ef7c247f300cc7a25
+index 0000000000000000000000000000000000000000..87d7cbaf89263e7658a613aa10a8a9ddccfb4df1
 --- /dev/null
 +++ b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
 @@ -0,0 +1,144 @@
@@ -106,7 +106,7 @@ index 0000000000000000000000000000000000000000..64c38af3861ff14679570f8ef7c247f3
 +            case 5 -> component = component.append(Component.text("   External: ").color(NamedTextColor.WHITE).append(Component.text(cache.externalPlayers()).color(NamedTextColor.YELLOW)));
 +            case 7 -> component = component.append(Component.text("   Local: ").color(NamedTextColor.WHITE).append(Component.text(cache.localPlayers()).color(NamedTextColor.YELLOW)));
 +            // no line 8
-+            case 9 -> component = component.append(Component.text("   Servers: ").color(NamedTextColor.WHITE).append(Component.text(cache.servers.size()).color(NamedTextColor.YELLOW)));
++            case 9 -> component = component.append(Component.text("   External servers: ").color(NamedTextColor.WHITE).append(Component.text(cache.servers.size()).color(NamedTextColor.YELLOW)));
 +        }
 +        return component;
 +    }
