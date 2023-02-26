@@ -26,10 +26,10 @@ index 4e86da4e5f8af5ab6e07f846545f7b4e51e629aa..dc9d2b7ff44b0ca31ab1b6e6258795c7
  
 diff --git a/src/main/java/puregero/multipaper/commands/MPMapCommand.java b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..f8628c0a4b8676c9736b67ee5bfa9bc4cc6625dd
+index 0000000000000000000000000000000000000000..64c38af3861ff14679570f8ef7c247f300cc7a25
 --- /dev/null
 +++ b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,144 @@
 +package puregero.multipaper.commands;
 +
 +import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
@@ -44,6 +44,7 @@ index 0000000000000000000000000000000000000000..f8628c0a4b8676c9736b67ee5bfa9bc4
 +import org.jetbrains.annotations.NotNull;
 +import puregero.multipaper.MultiPaper;
 +
++import java.util.ArrayList;
 +import java.util.HashMap;
 +import java.util.List;
 +import java.util.UUID;
@@ -72,42 +73,40 @@ index 0000000000000000000000000000000000000000..f8628c0a4b8676c9736b67ee5bfa9bc4
 +        return true;
 +    }
 +
-+    private record LocalExternalCache(int localPlayers, int externalPlayers) {
-+
++    private record LocalExternalCache(int localPlayers, int externalPlayers, List<String> servers) {
 +        public int getTotal() {
 +            return localPlayers + externalPlayers;
 +        }
-+
 +    }
-+
-+
 +
 +    private LocalExternalCache computeLocalExternalCache(Player player, int radius) {
 +        List<Player> players = (List<Player>) player.getWorld().getNearbyPlayers(player.getLocation(), (16 * radius), (16 * radius));
++        List<String> servers = new ArrayList<>();
 +        int externalPlayers = 0;
 +        int localPlayers = 0;
 +        for (Player loopPlayer : players) {
++            if (!servers.contains(player.getExternalServerName())) servers.add(player.getExternalServerName());
 +            if (loopPlayer.isExternalPlayer()) {
 +                externalPlayers++;
 +            } else {
 +                localPlayers++;
 +            }
 +        }
-+        return new LocalExternalCache(localPlayers, externalPlayers);
++        return new LocalExternalCache(localPlayers, externalPlayers, servers);
 +    }
 +
-+    private Component getStats(Player player, int radius, int row, LocalExternalCache cache) {
++    private Component getStats(int radius, int row, LocalExternalCache cache) {
 +        Component component = Component.text("");
 +        int actualRow = radius + row;
-+        System.out.println(actualRow);
 +        switch (actualRow) {
 +            case 0 -> component = component.append(Component.text("Stats: ").color(NamedTextColor.WHITE));
 +            case 1 -> component = component.append(Component.text("   Map radius: ").color(NamedTextColor.WHITE).append(Component.text(radius).color(NamedTextColor.YELLOW)));
-+
++            // no line 2
 +            case 3 -> component = component.append(Component.text("   Players: ").color(NamedTextColor.WHITE).append(Component.text(cache.getTotal()).color(NamedTextColor.YELLOW)));
 +            case 5 -> component = component.append(Component.text("   External: ").color(NamedTextColor.WHITE).append(Component.text(cache.externalPlayers()).color(NamedTextColor.YELLOW)));
 +            case 7 -> component = component.append(Component.text("   Local: ").color(NamedTextColor.WHITE).append(Component.text(cache.localPlayers()).color(NamedTextColor.YELLOW)));
-+
++            // no line 8
++            case 9 -> component = component.append(Component.text("   Servers: ").color(NamedTextColor.WHITE).append(Component.text(cache.servers.size()).color(NamedTextColor.YELLOW)));
 +        }
 +        return component;
 +    }
@@ -116,8 +115,8 @@ index 0000000000000000000000000000000000000000..f8628c0a4b8676c9736b67ee5bfa9bc4
 +        sendHeader(player, radius, 'W');
 +        LocalExternalCache cache = computeLocalExternalCache(player, radius);
 +        for (int row = -radius; row <= radius; row++) {
-+            Component componentRow = getMapRow(player, radius, row, 0, 'S', 'N');
-+            Component statsRow = getStats(player, radius, row, cache);
++            Component componentRow = getMapRow(player, radius, row, 0, 'N', 'S');
++            Component statsRow = getStats(radius, row, cache);
 +            Component finalRow = componentRow.append(statsRow);
 +            player.sendMessage(finalRow);
 +        }
