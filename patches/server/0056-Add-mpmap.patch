@@ -26,10 +26,10 @@ index 4e86da4e5f8af5ab6e07f846545f7b4e51e629aa..dc9d2b7ff44b0ca31ab1b6e6258795c7
  
 diff --git a/src/main/java/puregero/multipaper/commands/MPMapCommand.java b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f8347b2ee307
+index 0000000000000000000000000000000000000000..027aa436e3ba60774323346d855751ebda86d690
 --- /dev/null
 +++ b/src/main/java/puregero/multipaper/commands/MPMapCommand.java
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,184 @@
 +package puregero.multipaper.commands;
 +
 +import io.papermc.paper.chunk.system.scheduling.NewChunkHolder;
@@ -85,7 +85,7 @@ index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f834
 +        int externalPlayers = 0;
 +        int localPlayers = 0;
 +        for (Player loopPlayer : players) {
-+            if (!servers.contains(player.getExternalServerName())) servers.add(player.getExternalServerName());
++            if (!servers.contains(loopPlayer.getExternalServerName())) servers.add(loopPlayer.getExternalServerName());
 +            if (loopPlayer.isExternalPlayer()) {
 +                externalPlayers++;
 +            } else {
@@ -95,28 +95,39 @@ index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f834
 +        return new LocalExternalCache(localPlayers, externalPlayers, servers);
 +    }
 +
-+    private Component getStats(int radius, int row, LocalExternalCache cache) {
++    private Component getStats(Player player, int radius, int row, LocalExternalCache cache) {
 +        Component component = Component.text("");
 +        int actualRow = radius + row;
 +        switch (actualRow) {
 +            case 0 -> component = component.append(Component.text("Stats: ").color(NamedTextColor.WHITE));
-+            case 1 -> component = component.append(Component.text("   Map radius: ").color(NamedTextColor.WHITE).append(Component.text(radius).color(NamedTextColor.YELLOW)));
-+            // no line 2
-+            case 3 -> component = component.append(Component.text("   Players: ").color(NamedTextColor.WHITE).append(Component.text(cache.getTotal()).color(NamedTextColor.YELLOW)));
-+            case 5 -> component = component.append(Component.text("   External: ").color(NamedTextColor.WHITE).append(Component.text(cache.externalPlayers()).color(NamedTextColor.YELLOW)));
-+            case 7 -> component = component.append(Component.text("   Local: ").color(NamedTextColor.WHITE).append(Component.text(cache.localPlayers()).color(NamedTextColor.YELLOW)));
-+            // no line 8
-+            case 9 -> component = component.append(Component.text("   External servers: ").color(NamedTextColor.WHITE).append(Component.text(cache.servers.size()).color(NamedTextColor.YELLOW)));
++
++            case 1 -> component = component.append(Component.text("   Chunk: ").color(NamedTextColor.WHITE).append(Component.text(player.getChunk().getX()+ ", " + player.getChunk().getZ()).color(NamedTextColor.YELLOW)));
++            case 2 -> component = component.append(Component.text("   Map radius: ").color(NamedTextColor.WHITE).append(Component.text(radius + " chunks").color(NamedTextColor.YELLOW)));
++            case 3 -> component = component.append(Component.text("   Facing: ").color(NamedTextColor.WHITE).append(Component.text(getCardinalDirection(player)).color(NamedTextColor.YELLOW)));
++            case 4 -> component = component.append(Component.text("   Servers: ").color(NamedTextColor.WHITE).append(Component.text(cache.servers.size()).color(NamedTextColor.YELLOW)));
++
++            case 6 -> component = component.append(Component.text("   Players: ").color(NamedTextColor.WHITE).append(Component.text(cache.getTotal()).color(NamedTextColor.YELLOW)));
++            case 7 -> component = component.append(Component.text("   External: ").color(NamedTextColor.WHITE).append(Component.text(cache.externalPlayers()).color(NamedTextColor.YELLOW)));
++            case 8 -> component = component.append(Component.text("  Local: ").color(NamedTextColor.WHITE).append(Component.text(cache.localPlayers()).color(NamedTextColor.YELLOW)));
++
++            case 10 -> component = component.append(Component.text("   World: ").color(NamedTextColor.WHITE).append(Component.text(player.getWorld().getName()).color(NamedTextColor.YELLOW)));
++            case 11 -> component = component.append(Component.text("   entities (L): ").color(NamedTextColor.WHITE).append(Component.text(player.getWorld().getEntityCount()).color(NamedTextColor.YELLOW)));
++            case 12 -> component = component.append(Component.text("   chunks (L): ").color(NamedTextColor.WHITE).append(Component.text(player.getWorld().getChunkCount()).color(NamedTextColor.YELLOW)));
++            case 13 -> component = component.append(Component.text("   view distance: ").color(NamedTextColor.WHITE).append(Component.text(player.getWorld().getViewDistance()).color(NamedTextColor.YELLOW)));
++            case 14 -> component = component.append(Component.text("   simulation distance: ").color(NamedTextColor.WHITE).append(Component.text(player.getWorld().getSimulationDistance()).color(NamedTextColor.YELLOW)));
++
++
++            case 16 -> component = component.append(Component.text(" (L): ").color(NamedTextColor.WHITE).append(Component.text("Locally").color(NamedTextColor.YELLOW)));
 +        }
 +        return component;
 +    }
 +
 +    private void sendMap(Player player, int radius) {
-+        Component message = getHeader(radius, 'W');
++        Component message = Component.text(System.lineSeparator()).append(getHeader(radius, 'W'));
 +        LocalExternalCache cache = computeLocalExternalCache(player, radius);
 +        for (int row = -radius; row <= radius; row++) {
 +            Component componentRow = getMapRow(player, radius, row, 0, 'N', 'S');
-+            Component statsRow = getStats(radius, row, cache);
++            Component statsRow = getStats(player, radius, row, cache);
 +            Component finalRow = componentRow.append(statsRow);
 +            message = message.append(Component.text(System.lineSeparator())).append(finalRow);
 +        }
@@ -139,7 +150,7 @@ index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f834
 +        while (i <= radius) {
 +            StringBuilder builder = new StringBuilder();
 +            NewChunkHolder newChunkHolder = getChunkHolder(player, row, i);
-+            String name = newChunkHolder == null || newChunkHolder.externalOwner == null ? null : newChunkHolder.externalOwner.getName();
++            String serverName = newChunkHolder == null || newChunkHolder.externalOwner == null ? null : newChunkHolder.externalOwner.getName();
 +            NamedTextColor color = newChunkHolder == null ? NamedTextColor.DARK_GRAY : (newChunkHolder.externalOwner == null ? NamedTextColor.WHITE : (newChunkHolder.externalOwner.isMe() ? NamedTextColor.AQUA : NamedTextColor.RED));
 +
 +            while (i <= radius) {
@@ -149,15 +160,16 @@ index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f834
 +                    break;
 +                }
 +
-+                builder.append(row == 0 && i == 0 ? "\u25A0 " : "+ ");
++                builder.append(row == 0 && i == 0 ? "■ " : "+ ");
 +
 +                i++;
 +            }
 +
 +            Component innerComponent = Component.text(builder.toString()).color(color);
 +
-+            if (name != null) {
-+                innerComponent = innerComponent.hoverEvent(HoverEvent.showText(Component.text(name).color(color)));
++            if (serverName != null) {
++                Component hover = Component.text(""). color(color);
++                innerComponent = innerComponent.hoverEvent(HoverEvent.showText(hover));
 +            }
 +
 +            component = component.append(innerComponent);
@@ -174,6 +186,33 @@ index 0000000000000000000000000000000000000000..34b598eb4be8f0ecf7d65734e808f834
 +    private Component getHeader(int radius, char way) {
 +        return Component.text("+ " + "- ".repeat(((radius * 2 + 1) / 2)) + way + " " + "- ".repeat((radius * 2 + 1) / 2) + "+").color(NamedTextColor.GOLD);
 +    }
++
++    private static String getCardinalDirection(Player player) {
++        double rotation = (player.getLocation().getYaw() - 180) % 360;
++        if (rotation < 0) {
++            rotation += 360.0;
++        }
++        if (0 <= rotation && rotation < 22.5 || 337.5 <= rotation && rotation < 360.0) {
++            return "North"; // north
++        } else if (22.5 <= rotation && rotation < 67.5) {
++            return "Northeast"; // northeast
++        } else if (67.5 <= rotation && rotation < 112.5) {
++            return "East"; // east
++        } else if (112.5 <= rotation && rotation < 157.5) {
++            return "Southeast"; // southeast
++        } else if (157.5 <= rotation && rotation < 202.5) {
++            return "South"; // south
++        } else if (202.5 <= rotation && rotation < 247.5) {
++            return "Southwest"; // southwest
++        } else if (247.5 <= rotation && rotation < 292.5) {
++            return "West"; // west
++        } else if (292.5 <= rotation && rotation < 337.5) {
++            return "Northwest"; // northwest
++        } else {
++            return "■";
++        }
++    }
++
 +}
 diff --git a/src/main/java/puregero/multipaper/permissions/MultiPaperCommandPermissions.java b/src/main/java/puregero/multipaper/permissions/MultiPaperCommandPermissions.java
 index 546da05992c945e90545bcd0d3f2cb5c2c4dbb03..a21628f28a803ca2329b7f63257dad16829fe7f6 100644
